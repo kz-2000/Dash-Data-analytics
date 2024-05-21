@@ -4,6 +4,7 @@ from dash import dcc, html
 from dash.dependencies import Input, Output
 import plotly.graph_objects as go
 from data_import import fetch_proposals_data, clean_data, fetch_requests_data, clean_request_data # import functions
+import pandas as pd
 
 # Initialize the Dash app
 app = dash.Dash(__name__, suppress_callback_exceptions=True)
@@ -17,15 +18,19 @@ app.layout = html.Div([
     # First chart for proposals
     dcc.Graph(id='live-update-graph-proposals'),
 
+    # Conversion chart for proposals
+    dcc.Graph(id='live-update-graph-conversion'),
+
     # Second chart for requests
     dcc.Graph(id='live-update-graph-requests')
 ])
 
-@app.callback(Output('live-update-graph-proposals', 'figure'),
-              Input('fetch-button', 'n_clicks'))
+@app.callback([Output('live-update-graph-proposals', 'figure'),
+               Output('live-update-graph-conversion', 'figure')],
+              [Input('fetch-button', 'n_clicks')])
 def update_graph_proposals(n_clicks):
     if n_clicks == 0:
-        return go.Figure()
+        return go.Figure(), go.Figure()
 
     print("Fetching Proposal data...")
     data = fetch_proposals_data()
@@ -33,35 +38,59 @@ def update_graph_proposals(n_clicks):
     # Clean the data
     data = clean_data(data)
     
-    # Create cumulative count
+    # Sort data by created_at
     data = data.sort_values('created_at')
-    data['cumulative_count'] = data.index + 1
     
-    # Resample data by week
+    # Calculate cumulative counts
+    data['cumulative_total'] = range(1, len(data) + 1)
+    data['cumulative_converted'] = data['status'].eq('CONFIRMED').cumsum()
+    
+    # Calculate total conversion rate
+    data['total_conversion_rate'] = (data['cumulative_converted'] / data['cumulative_total']).fillna(0)
+    
+    # Resample data by week for counts
     weekly_data = data.resample('W-Mon', on='created_at').size().reset_index(name='weekly_count')
     weekly_data['cumulative_count'] = weekly_data['weekly_count'].cumsum()
 
-    fig = go.Figure()
+    fig_proposals = go.Figure()
 
     # Add weekly count bars
-    fig.add_trace(go.Bar(x=weekly_data['created_at'], y=weekly_data['weekly_count'],
-                         name='Weekly Count', marker_color='blue'))
+    fig_proposals.add_trace(go.Bar(x=weekly_data['created_at'], y=weekly_data['weekly_count'],
+                                   name='Weekly Count', marker_color='blue'))
 
     # Add cumulative count line
-    fig.add_trace(go.Scatter(x=weekly_data['created_at'], y=weekly_data['cumulative_count'],
-                             mode='lines', name='Cumulative Count', line=dict(color='red')))
+    fig_proposals.add_trace(go.Scatter(x=weekly_data['created_at'], y=weekly_data['cumulative_count'],
+                                       mode='lines', name='Cumulative Count', line=dict(color='red')))
 
     # Update the layout
-    fig.update_layout(title='Proposals Created Over Time',
-                      xaxis_title='Date',
-                      yaxis_title='Number of Proposals',
-                      legend_title='Metric')
+    fig_proposals.update_layout(title='Proposals Created Over Time',
+                                xaxis_title='Date',
+                                yaxis_title='Number of Proposals',
+                                legend_title='Metric')
+    
+    # Resample to weekly for plotting conversion rate
+    conversion_rate_data = data.resample('W-Mon', on='created_at').last().reset_index()
 
-    return fig
+    fig_conversion = go.Figure()
+
+    # Add conversion rate line
+    fig_conversion.add_trace(go.Scatter(x=conversion_rate_data['created_at'], y=conversion_rate_data['total_conversion_rate'],
+                                        mode='lines+markers', name='Conversion Rate', line=dict(color='purple')))
+
+    # Update the layout
+    fig_conversion.update_layout(
+        title='Total Conversion Rate Over Time',
+        xaxis_title='Date',
+        yaxis_title='Conversion Rate',
+        legend_title='Metric',
+        yaxis=dict(tickformat='.0%')
+    )
+
+    return fig_proposals, fig_conversion
 
 
 @app.callback(Output('live-update-graph-requests', 'figure'),
-              Input('fetch-button', 'n_clicks'))
+              [Input('fetch-button', 'n_clicks')])
 def update_graph_requests(n_clicks):
     if n_clicks == 0:
         # Initial empty figure
@@ -83,23 +112,25 @@ def update_graph_requests(n_clicks):
     weekly_data = data.resample('W-Mon', on='created_at').size().reset_index(name='weekly_count')
     weekly_data['cumulative_count'] = weekly_data['weekly_count'].cumsum()
 
-    fig = go.Figure()
+    fig_requests = go.Figure()
 
     # Add weekly count bars
-    fig.add_trace(go.Bar(x=weekly_data['created_at'], y=weekly_data['weekly_count'],
-                         name='Weekly Count', marker_color='green'))
+    fig_requests.add_trace(go.Bar(x=weekly_data['created_at'], y=weekly_data['weekly_count'],
+                                  name='Weekly Count', marker_color='green'))
 
     # Add cumulative count line
-    fig.add_trace(go.Scatter(x=weekly_data['created_at'], y=weekly_data['cumulative_count'],
-                             mode='lines', name='Cumulative Count', line=dict(color='orange')))
+    fig_requests.add_trace(go.Scatter(x=weekly_data['created_at'], y=weekly_data['cumulative_count'],
+                                      mode='lines', name='Cumulative Count', line=dict(color='orange')))
 
     # Update the layout
-    fig.update_layout(title='Requests Over Time',
-                      xaxis_title='Date',
-                      yaxis_title='Number of Requests',
-                      legend_title='Metric')
+    fig_requests.update_layout(title='Requests Over Time',
+                               xaxis_title='Date',
+                               yaxis_title='Number of Requests',
+                               legend_title='Metric')
 
-    return fig
+    return fig_requests
+
+
 
 
 if __name__ == '__main__':
