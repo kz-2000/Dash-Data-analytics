@@ -22,6 +22,11 @@ def fetch_requests_data():
     df['created_at'] = pd.to_datetime(df['created_at'], format='ISO8601')
     return df
 
+def fetch_area_data():
+    response = supabase.table('area').select('*').execute()
+    data = response.data
+    return pd.DataFrame(data)
+
 # Clean the data for the proposal table
 
 def clean_data(df):

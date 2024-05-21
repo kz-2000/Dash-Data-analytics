@@ -3,7 +3,7 @@ import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output
 import plotly.graph_objects as go
-from data_import import fetch_proposals_data, clean_data, fetch_requests_data, clean_request_data # import functions
+from data_import import fetch_proposals_data, clean_data, fetch_requests_data, clean_request_data, fetch_area_data # import functions
 import pandas as pd
 
 # Initialize the Dash app
@@ -18,42 +18,70 @@ app.layout = html.Div([
     # First chart for requests
     dcc.Graph(id='live-update-graph-requests'),
 
-    # Chart for proposals by status
-    dcc.Graph(id='pie-chart-status'),
+    # Pie charts for proposals and requests status
+    html.Div([
+        dcc.Graph(id='pie-chart-proposals-status', style={'display': 'inline-block', 'width': '49%'}),
+        dcc.Graph(id='pie-chart-requests-status', style={'display': 'inline-block', 'width': '49%'}),
+    ]),
 
     # Conversion chart for proposals
     dcc.Graph(id='live-update-graph-proposals'),
 
     # Second chart for requests
-    dcc.Graph(id='live-update-graph-conversion')
+    dcc.Graph(id='live-update-graph-conversion'),
+
+        # Chart for confirmed proposals per area
+    dcc.Graph(id='histogram-confirmed-proposals-area')
 ])
 
 @app.callback([Output('live-update-graph-proposals', 'figure'),
                Output('live-update-graph-conversion', 'figure'),
-               Output('pie-chart-status', 'figure')],
+               Output('pie-chart-proposals-status', 'figure'),
+               Output('pie-chart-requests-status', 'figure'),
+               Output('histogram-confirmed-proposals-area', 'figure')],
               [Input('fetch-button', 'n_clicks')])
 def update_graph_proposals(n_clicks):
     if n_clicks == 0:
-        return go.Figure(), go.Figure(), go.Figure()
+        return go.Figure(), go.Figure(), go.Figure(), go.Figure(), go.Figure()
 
     print("Fetching Proposal data...")
-    data = fetch_proposals_data()
+    proposal_data = fetch_proposals_data()
     
     # Clean the data
-    data = clean_data(data)
+    proposal_data = clean_data(proposal_data)
+
+    # Fetching Area data
+    print("Fetching Area data...")
+    area_data = fetch_area_data()
+
+    # Explode the 'areas' column to create a row for each area_id
+    proposal_data = proposal_data.explode('areas')
+
+    # Merge proposals with area data to get area names
+    merged_data = proposal_data.merge(area_data, how='left', left_on='areas', right_on='id')
+    print(f"Proposals data after merging with area data: {merged_data['name'].head()}")
+
+    # Filter confirmed proposals
+    confirmed_proposals = merged_data[merged_data['status'] == 'CONFIRMED']
     
+    # Histogram for confirmed proposals per area
+    area_counts = confirmed_proposals['name'].value_counts()
+    fig_histogram = go.Figure(data=[go.Bar(x=area_counts.index, y=area_counts.values, marker_color='blue')])
+    fig_histogram.update_layout(title='Confirmed Proposals per Area',xaxis_title='Area',yaxis_title='Number of Confirmed Proposals')
+
+
     # Sort data by created_at
-    data = data.sort_values('created_at')
+    proposal_data = proposal_data.sort_values('created_at')
     
     # Calculate cumulative counts
-    data['cumulative_total'] = range(1, len(data) + 1)
-    data['cumulative_converted'] = data['status'].eq('CONFIRMED').cumsum()
+    proposal_data['cumulative_total'] = range(1, len(proposal_data) + 1)
+    proposal_data['cumulative_converted'] = proposal_data['status'].eq('CONFIRMED').cumsum()
     
     # Calculate total conversion rate
-    data['total_conversion_rate'] = (data['cumulative_converted'] / data['cumulative_total']).fillna(0)
+    proposal_data['total_conversion_rate'] = (proposal_data['cumulative_converted'] / proposal_data['cumulative_total']).fillna(0)
     
     # Resample data by week for counts
-    weekly_data = data.resample('W-Mon', on='created_at').size().reset_index(name='weekly_count')
+    weekly_data = proposal_data.resample('W-Mon', on='created_at').size().reset_index(name='weekly_count')
     weekly_data['cumulative_count'] = weekly_data['weekly_count'].cumsum()
 
     fig_proposals = go.Figure()
@@ -73,7 +101,7 @@ def update_graph_proposals(n_clicks):
                                 legend_title='Metric')
     
     # Resample to weekly for plotting conversion rate
-    conversion_rate_data = data.resample('W-Mon', on='created_at').last().reset_index()
+    conversion_rate_data = proposal_data.resample('W-Mon', on='created_at').last().reset_index()
 
     fig_conversion = go.Figure()
 
@@ -91,13 +119,19 @@ def update_graph_proposals(n_clicks):
     )
 
         # Create pie chart for proposal status
-    status_counts = data['status'].value_counts()
+    status_counts = proposal_data['status'].value_counts()
     fig_pie = go.Figure(data=[go.Pie(labels=status_counts.index, values=status_counts.values, hole=.3)])
 
     # Update the layout for the pie chart
     fig_pie.update_layout(title='Proposals by Status')
 
-    return fig_proposals, fig_conversion, fig_pie
+    request_data = fetch_requests_data()
+
+    request_status_counts = request_data['status'].value_counts()
+    fig_pie_requests = go.Figure(data=[go.Pie(labels=request_status_counts.index, values=request_status_counts.values, hole=.3)])
+    fig_pie_requests.update_layout(title='Requests by Status')
+
+    return fig_proposals, fig_conversion, fig_pie, fig_pie_requests, fig_histogram
 
 
 @app.callback(Output('live-update-graph-requests', 'figure'),
