@@ -15,22 +15,26 @@ app.layout = html.Div([
     # Button to fetch data
     html.Button('Fetch Data', id='fetch-button', n_clicks=0),
     
-    # First chart for proposals
-    dcc.Graph(id='live-update-graph-proposals'),
+    # First chart for requests
+    dcc.Graph(id='live-update-graph-requests'),
+
+    # Chart for proposals by status
+    dcc.Graph(id='pie-chart-status'),
 
     # Conversion chart for proposals
-    dcc.Graph(id='live-update-graph-conversion'),
+    dcc.Graph(id='live-update-graph-proposals'),
 
     # Second chart for requests
-    dcc.Graph(id='live-update-graph-requests')
+    dcc.Graph(id='live-update-graph-conversion')
 ])
 
 @app.callback([Output('live-update-graph-proposals', 'figure'),
-               Output('live-update-graph-conversion', 'figure')],
+               Output('live-update-graph-conversion', 'figure'),
+               Output('pie-chart-status', 'figure')],
               [Input('fetch-button', 'n_clicks')])
 def update_graph_proposals(n_clicks):
     if n_clicks == 0:
-        return go.Figure(), go.Figure()
+        return go.Figure(), go.Figure(), go.Figure()
 
     print("Fetching Proposal data...")
     data = fetch_proposals_data()
@@ -86,7 +90,14 @@ def update_graph_proposals(n_clicks):
         yaxis=dict(tickformat='.0%')
     )
 
-    return fig_proposals, fig_conversion
+        # Create pie chart for proposal status
+    status_counts = data['status'].value_counts()
+    fig_pie = go.Figure(data=[go.Pie(labels=status_counts.index, values=status_counts.values, hole=.3)])
+
+    # Update the layout for the pie chart
+    fig_pie.update_layout(title='Proposals by Status')
+
+    return fig_proposals, fig_conversion, fig_pie
 
 
 @app.callback(Output('live-update-graph-requests', 'figure'),
