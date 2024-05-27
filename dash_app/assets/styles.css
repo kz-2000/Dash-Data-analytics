@@ -1,0 +1,37 @@
+.rounded-row {
+    border-radius: 24px;
+    overflow: hidden;
+    background-color: #170229; /* Example background color */
+    padding: 15px; /* Example padding */
+    margin-left: 20px;
+    margin-right: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Example shadow for effect */
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 300;
+    font-style: normal;
+}
+
+h1, .title-text {
+    font-family: 'Poppins', sans-serif;
+    color: #212528; /* Ensure color is applied here for consistency */
+    font-weight: 400;
+    font-style: normal;
+}
+  
+/* Center the logo and adjust its size */
+.logo {
+    max-width: 350px; /* Adjust the width as needed */
+    margin-bottom: 0; /* Remove bottom margin */
+    padding-bottom: 0;
+    margin-top: 0;
+}
+
+.d-flex.justify-content-center {
+    display: flex;
+    justify-content: left;
+    align-items: left;
+}
+
