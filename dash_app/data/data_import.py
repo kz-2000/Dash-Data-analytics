@@ -35,7 +35,7 @@ def clean_data(df):
 #    df = df[df['owner_id'] != '751f6b1f-e696-4eb1-9b4e-4e93b9ef1025']
     df = df.reset_index(drop=True)
 
-    print(df[df['status']=='TO_DO'])
+#    print(df[df['status']=='TO_DO'])
     return df
 
 # Clean the data for the request table

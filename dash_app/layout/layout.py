@@ -32,5 +32,6 @@ def create_layout():
 
         dbc.Row([
             dbc.Col(dcc.Graph(id='live-update-graph-requests', config={'displayModeBar': True}), width=12)
-        ], className="mb-4 rounded-row")
+        ], className="mb-4 rounded-row"),
+
     ], fluid=True)
