@@ -2,3 +2,4 @@ venv
 
 .DS_Store
 requirements.txt
+dash_app/.env

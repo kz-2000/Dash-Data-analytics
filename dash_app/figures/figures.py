@@ -41,7 +41,7 @@ def create_proposals_figure(proposal_data):
     return fig_proposals
 
 def create_conversion_figure(proposal_data):
-    conversion_rate_data = proposal_data.resample('W-Mon', on='updated_at').last().reset_index()
+    conversion_rate_data = proposal_data.resample('D', on='updated_at').last().reset_index()
 
     fig_conversion = go.Figure()
     fig_conversion.add_trace(go.Scatter(x=conversion_rate_data['updated_at'], y=conversion_rate_data['total_conversion_rate'],

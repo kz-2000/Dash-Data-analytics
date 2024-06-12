@@ -4,6 +4,7 @@ import plotly.graph_objects as go
 from data.data_import import fetch_proposals_data, clean_data, fetch_requests_data, clean_request_data, fetch_area_data
 from figures.figures import create_histogram, create_conversion_figure, create_pie_chart, create_proposals_figure, create_requests_figure
 from data.data_processing import calculate_conversion_rate
+import pandas as pd
 
 def register_callbacks(app):
     @app.callback(
@@ -25,7 +26,7 @@ def register_callbacks(app):
         area_data = fetch_area_data()
 
         # Calculate conversion rate only for the conversion figure
-        conversion_data = calculate_conversion_rate(proposal_data.copy())
+        conversion_data = calculate_conversion_rate(proposal_data.copy(deep=True))
 
         fig_histogram = create_histogram(proposal_data, area_data)
         fig_proposals = create_proposals_figure(proposal_data)

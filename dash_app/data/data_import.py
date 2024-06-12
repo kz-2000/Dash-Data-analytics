@@ -1,10 +1,13 @@
 from supabase import create_client, Client
 import pandas as pd
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Supabase URL and API Key
-url = 'https://lmpflklddofmcbqsfdot.supabase.co'
-key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtcGZsa2xkZG9mbWNicXNmZG90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTYzMzk4MzMsImV4cCI6MjAxMTkxNTgzM30.r_QmcE2G653d94rb7DpU3wPhiUStJVwxtqOePenLrvk'
-
+url = os.environ.get('SUPABASE_URL')
+key = os.environ.get('SUPABASE_KEY')
 # Create a Supabase client
 supabase: Client = create_client(url, key)
 
