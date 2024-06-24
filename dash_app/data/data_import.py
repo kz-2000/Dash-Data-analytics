@@ -31,6 +31,21 @@ def fetch_area_data():
     data = response.data
     return pd.DataFrame(data)
 
+def fetch_supplier_data():
+    response = supabase.table('supplier').select('*').execute()
+    data = response.data
+    return pd.DataFrame(data)
+
+def fetch_proposal_service_data():
+    response = supabase.table('proposal_service').select('*').execute()
+    data = response.data
+    return pd.DataFrame(data)
+
+def fetch_profiles_data():
+    response = supabase.table('profiles').select('*').execute()
+    data = response.data
+    return pd.DataFrame(data)
+
 # Clean the data for the proposal table
 
 def clean_data(df):
@@ -44,18 +59,25 @@ def clean_data(df):
 # Clean the data for the request table
 
 def clean_request_data(df):
-    print(f"Initial number of rows in the request data: {len(df)}")  # Print the initial number of rows
+#    print(f"Initial number of rows in the request data: {len(df)}")  # Print the initial number of rows
     
     # Filter the DataFrame
     df = df[df['status'] != 'ARCHIVED']
     
-    print(f"Number of rows after filtering: {len(df)}")  # Print the number of rows after filtering
+#    print(f"Number of rows after filtering: {len(df)}")  # Print the number of rows after filtering
     
     # Reset the index
     df = df.reset_index(drop=True)
     
-    print(f"Number of rows in the cleaned request data: {len(df)}")  # Print the number of rows after resetting the index
+#    print(f"Number of rows in the cleaned request data: {len(df)}")  # Print the number of rows after resetting the index
     
+    return df
+
+def clean_profiles_data(df):
+    df = df[df['id'] != 'dc424d6e-dd04-4850-be63-19b4f557ffdc' & '356ed23b-ea02-41b0-98ab-89ba686e1ab2']
+
+    df = df.reset_index(drop=True)
+
     return df
 
 # Fetch the data

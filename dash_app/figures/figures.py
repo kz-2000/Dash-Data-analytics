@@ -1,6 +1,8 @@
 import plotly.express as px
 import plotly.graph_objects as go
 
+# Creates Histogram displaying the amount of proposals per Area, divided per Status
+
 def create_histogram(proposal_data, area_data):
     proposal_area_data = proposal_data.explode('areas')
     merged_data = proposal_area_data.merge(area_data, how='left', left_on='areas', right_on='id')
@@ -22,6 +24,8 @@ def create_histogram(proposal_data, area_data):
 
     return fig_histogram
 
+# Creates a line graph displaying the total amount of cumulative proposals over time & a bar chart displaying the weekly amount of proposals that came in
+
 def create_proposals_figure(proposal_data):
     proposal_data = proposal_data.sort_values('created_at')
     proposal_data['cumulative_total'] = range(1, len(proposal_data) + 1)
@@ -40,6 +44,9 @@ def create_proposals_figure(proposal_data):
                                 font=dict(family='Poppins, sans-serif'))
     return fig_proposals
 
+
+# Creates Line graph displaying the conversion rate over time, using the updated_at column
+
 def create_conversion_figure(proposal_data):
     conversion_rate_data = proposal_data.resample('D', on='updated_at').last().reset_index()
 
@@ -56,11 +63,16 @@ def create_conversion_figure(proposal_data):
     )
     return fig_conversion
 
+
+# Creates a pie chart displaying the requests/proposals by status
+
 def create_pie_chart(data, column, title):
     status_counts = data[column].value_counts()
     fig_pie = go.Figure(data=[go.Pie(labels=status_counts.index, values=status_counts.values, hole=.3)])
     fig_pie.update_layout(title=title, font=dict(family='Poppins, sans-serif'))
     return fig_pie
+
+# Creates a line graph displaying the cumulative count of requests over time & a bar chart with the weekly added 
 
 def create_requests_figure(request_data):
     request_data = request_data.sort_values('created_at')
@@ -77,3 +89,13 @@ def create_requests_figure(request_data):
                                legend_title='Metric',
                                font=dict(family='Poppins, sans-serif'))
     return fig_requests
+
+def create_supplier_bar_chart(merged_data):
+    # Group by supplier and count the number of services
+    supplier_service_count = merged_data.groupby('name')['service_id'].count().reset_index()
+    supplier_service_count.columns = ['Supplier', 'Number of Services']
+
+    # Create the bar chart
+    fig = px.bar(supplier_service_count, x='Supplier', y='Number of Services', title='Number of Services Provided by Each Supplier')
+
+    return fig

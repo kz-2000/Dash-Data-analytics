@@ -1,9 +1,9 @@
 from dash.dependencies import Input, Output, State
 import plotly.express as px
 import plotly.graph_objects as go
-from data.data_import import fetch_proposals_data, clean_data, fetch_requests_data, clean_request_data, fetch_area_data
-from figures.figures import create_histogram, create_conversion_figure, create_pie_chart, create_proposals_figure, create_requests_figure
-from data.data_processing import calculate_conversion_rate
+from data.data_import import fetch_proposals_data, clean_data, fetch_requests_data, clean_request_data, fetch_area_data, fetch_supplier_data, fetch_proposal_service_data
+from figures.figures import create_histogram, create_conversion_figure, create_pie_chart, create_proposals_figure, create_requests_figure, create_supplier_bar_chart
+from data.data_processing import calculate_conversion_rate, merge_tables
 import pandas as pd
 
 def register_callbacks(app):
@@ -50,22 +50,17 @@ def register_callbacks(app):
 
         return fig_requests
 
-    @app.callback(
-        Output('report-download', 'data'),
-        [Input('generate-report-button', 'n_clicks')],
-        [State('start-date', 'value'), State('end-date', 'value')]
-    )
-    def generate_report(n_clicks, start_date, end_date):
+    @app.callback(Output('supplier-bar-chart', 'figure'), [Input('fetch-button', 'n_clicks')])
+    def update_supplier_barchart(n_clicks):
         if n_clicks == 0:
-            return None
-        
-        proposal_data = fetch_proposals_data()
-        proposal_data = clean_data(proposal_data)
-        
-        # Generate the report
-        report_df = generate_proposal_report(proposal_data, start_date, end_date)
-        
-        return dcc.send_data_frame(report_df.to_excel, "proposal_report.xlsx")
+            return empty_figures(1)[0]
+
+        supplier_data = fetch_supplier_data()
+        proposal_service_data = fetch_proposal_service_data()
+        merged_data = merge_tables(proposal_service_data, supplier_data, 'supplier_id', 'id')
+        fig_suppliers = create_supplier_bar_chart(merged_data)
+
+        return fig_suppliers
 
 def empty_figures(n):
     return [go.Figure() for _ in range(n)]

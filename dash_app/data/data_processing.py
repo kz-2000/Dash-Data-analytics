@@ -7,10 +7,16 @@ def calculate_conversion_rate(df):
 
     # Calculate total conversion rate
     df['total_conversion_rate'] = (df['cumulative_converted'] / df['cumulative_total'])
-    print(df['total_conversion_rate'])
+    #print(df['total_conversion_rate'])
     
     # Debug: print out the DataFrame columns and first few rows
 
-    print("Proposal Data Sample:", df.head())
+   # print("Proposal Data Sample:", df.head())
     
     return df
+
+def merge_tables(df1, df2, left_column, right_column):
+    # Merge the data on supplier_id
+    merged_data = pd.merge(df1, df2, left_on=left_column, right_on=right_column)
+    
+    return merged_data
