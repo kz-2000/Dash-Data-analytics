@@ -46,6 +46,11 @@ def fetch_profiles_data():
     data = response.data
     return pd.DataFrame(data)
 
+def fetch_service_data():
+    response = supabase.table('service').select('*').execute()
+    data = response.data
+    return pd.DataFrame(data)
+
 # Clean the data for the proposal table
 
 def clean_data(df):

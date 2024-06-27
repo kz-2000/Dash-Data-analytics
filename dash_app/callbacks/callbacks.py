@@ -1,8 +1,8 @@
 from dash.dependencies import Input, Output, State
 import plotly.express as px
 import plotly.graph_objects as go
-from data.data_import import fetch_proposals_data, clean_data, fetch_requests_data, clean_request_data, fetch_area_data, fetch_supplier_data, fetch_proposal_service_data
-from figures.figures import create_histogram, create_conversion_figure, create_pie_chart, create_proposals_figure, create_requests_figure, create_supplier_bar_chart
+from data.data_import import fetch_proposals_data, clean_data, fetch_requests_data, clean_request_data, fetch_area_data, fetch_supplier_data, fetch_proposal_service_data, fetch_service_data
+from figures.figures import create_histogram, create_conversion_figure, create_pie_chart, create_proposals_figure, create_requests_figure, create_supplier_bar_chart, create_service_price_bar_chart
 from data.data_processing import calculate_conversion_rate, merge_tables
 import pandas as pd
 
@@ -61,6 +61,33 @@ def register_callbacks(app):
         fig_suppliers = create_supplier_bar_chart(merged_data)
 
         return fig_suppliers
+
+    @app.callback(Output('service-spending-bar-chart', 'figure'), [Input('fetch-button', 'n_clicks')])
+    def update_service_spending_barchart(n_clicks):
+        if n_clicks == 0:
+            return empty_figures(1)[0]
+
+        proposal_service_data = fetch_proposal_service_data()
+        service_data = fetch_service_data()
+
+        # Filter the data to include only 'CONFIRMED' or 'COMPLETED' statuses
+        proposal_service_data = proposal_service_data[proposal_service_data['status'].isin(['CONFIRMED', 'COMPLETED'])]
+        merged_data = merge_tables(service_data, proposal_service_data, 'id', 'service_id')
+
+        # Filter out rows where 'supplier_id' is missing
+        merged_data = merged_data[merged_data['supplier_id'].notna()]
+        
+        # Filter out rows where 'amount' is 0
+        merged_data = merged_data[merged_data['price'] != 0]
+
+        # Divide the 'amount' column by 100
+        merged_data['price'] = merged_data['price'] / 100
+
+
+        fig_service_spending = create_service_price_bar_chart(merged_data)
+
+        return fig_service_spending
+
 
 def empty_figures(n):
     return [go.Figure() for _ in range(n)]

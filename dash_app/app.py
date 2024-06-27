@@ -8,13 +8,15 @@ from dash_bootstrap_templates import load_figure_template
 # Makes the Bootstrap Themed Plotly templates available
 load_figure_template('vapor_dark')
 
+# Initialize server
+server = app.server
+
 # Initialize the Dash app with the Quartz Bootstrap theme and Google Fonts
 app = dash.Dash(__name__, external_stylesheets=[
     dbc.themes.VAPOR,
     'https://fonts.googleapis.com/css2?family=Poppins:wght@300;400&display=swap',
     '/assets/styles.css'
-], suppress_callback_exceptions=True)
-
+], suppress_callback_exceptions=True, server=server)
 
 
 # Set the app layout

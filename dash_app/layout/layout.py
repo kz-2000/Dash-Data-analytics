@@ -8,13 +8,17 @@ def create_layout():
                 html.Img(src='/assets/logo.svg', className="logo")
             ], className="d-flex justify-content-center align-items-center"), width=12)
         ], className="mb-4"),
-        
+
         dbc.Row([
             dbc.Col(dbc.Button('Fetch Data', id='fetch-button', n_clicks=0, color='primary', className="mb-3"), width='auto')
         ], className="mb-4"),
 
         dbc.Row([
             dbc.Col(dcc.Graph(id='supplier-bar-chart', config={'displayModeBar': True}), width=12)
+        ], className="mb-4 rounded-row"),
+
+        dbc.Row([
+            dbc.Col(dcc.Graph(id='service-spending-bar-chart', config={'displayModeBar': True}), width=12)
         ], className="mb-4 rounded-row"),
         
         dbc.Row([

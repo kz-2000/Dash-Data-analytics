@@ -72,7 +72,7 @@ def create_pie_chart(data, column, title):
     fig_pie.update_layout(title=title, font=dict(family='Poppins, sans-serif'))
     return fig_pie
 
-# Creates a line graph displaying the cumulative count of requests over time & a bar chart with the weekly added 
+# Creates a line graph displaying the cumulative count of requests over time & a bar chart with the weekly added requests
 
 def create_requests_figure(request_data):
     request_data = request_data.sort_values('created_at')
@@ -90,6 +90,8 @@ def create_requests_figure(request_data):
                                font=dict(family='Poppins, sans-serif'))
     return fig_requests
 
+# Creates a bar chart displaying the amount of services per supplier sold
+
 def create_supplier_bar_chart(merged_data):
     # Group by supplier and count the number of services
     supplier_service_count = merged_data.groupby('name')['service_id'].count().reset_index()
@@ -97,5 +99,23 @@ def create_supplier_bar_chart(merged_data):
 
     # Create the bar chart
     fig = px.bar(supplier_service_count, x='Supplier', y='Number of Services', title='Number of Services Provided by Each Supplier')
+
+    return fig
+
+# Creates a bar chart with the money spent per service
+
+def create_service_price_bar_chart(merged_data):
+    # Group by 'service_name' and calculate the total amount spent per service
+    spending_per_service = merged_data.groupby('title')['price'].sum().reset_index()
+
+    # Create a bar chart using Plotly Express
+    fig = px.bar(spending_per_service, x='title', y='price', title='Total Amount Spent per Service')
+
+    # Customize the layout of the chart
+    fig.update_layout(
+        xaxis_title='Service',
+        yaxis_title='Total Amount Spent',
+        xaxis_tickangle=-45,
+    )
 
     return fig
