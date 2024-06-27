@@ -15,7 +15,7 @@ app = dash.Dash(__name__, external_stylesheets=[
     '/assets/styles.css'
 ], suppress_callback_exceptions=True)
 
-
+server = app.server
 
 # Set the app layout
 app.layout = create_layout()
