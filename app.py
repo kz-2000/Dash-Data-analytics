@@ -1,7 +1,7 @@
 import dash
 import dash_bootstrap_components as dbc
-from layout.layout import create_layout
-from callbacks.callbacks import register_callbacks
+from dash_app.layout.layout import create_layout
+from dash_app.callbacks.callbacks import register_callbacks
 from dash_bootstrap_templates import load_figure_template
 from flask import Flask
 
