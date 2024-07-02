@@ -44,10 +44,20 @@ def fetch_proposal_service_data():
 def fetch_profiles_data():
     response = supabase.table('profiles').select('*').execute()
     data = response.data
-    return pd.DataFrame(data)
+    return  pd.DataFrame(data)
 
 def fetch_service_data():
     response = supabase.table('service').select('*').execute()
+    data = response.data
+    return pd.DataFrame(data)
+
+def fetch_proposal_history_data():
+    response = supabase.table('proposal_history').select('*').execute()
+    data = response.data
+    return pd.DataFrame(data)
+
+def fetch_travel_agent_data():
+    response = supabase.table('travel_agent').select('*').execute()
     data = response.data
     return pd.DataFrame(data)
 

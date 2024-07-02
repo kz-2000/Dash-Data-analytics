@@ -20,3 +20,13 @@ def merge_tables(df1, df2, left_column, right_column):
     merged_data = pd.merge(df1, df2, left_on=left_column, right_on=right_column)
     
     return merged_data
+
+def merge_names(df, column_name):
+    df[column_name] = df['first_name'] + ' ' + df['last_name']
+
+    return df
+
+def pick_columns(df, *columns):
+    df = df[list(columns)]
+
+    return df

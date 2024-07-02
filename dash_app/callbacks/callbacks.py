@@ -1,10 +1,12 @@
 from dash.dependencies import Input, Output, State
+from dash import dcc, callback_context
 import plotly.express as px
 import plotly.graph_objects as go
-from dash_app.data.data_import import fetch_proposals_data, clean_data, fetch_requests_data, clean_request_data, fetch_area_data, fetch_supplier_data, fetch_proposal_service_data, fetch_service_data
+from dash_app.data.data_import import fetch_proposals_data, clean_data, fetch_requests_data, clean_request_data, fetch_area_data, fetch_supplier_data, fetch_proposal_service_data, fetch_service_data, fetch_proposal_history_data, fetch_travel_agent_data, fetch_profiles_data
 from dash_app.figures.figures import create_histogram, create_conversion_figure, create_pie_chart, create_proposals_figure, create_requests_figure, create_supplier_bar_chart, create_service_price_bar_chart
-from dash_app.data.data_processing import calculate_conversion_rate, merge_tables
+from dash_app.data.data_processing import calculate_conversion_rate, merge_tables, merge_names, pick_columns
 import pandas as pd
+import openpyxl
 
 def register_callbacks(app):
     @app.callback(
@@ -87,6 +89,81 @@ def register_callbacks(app):
         fig_service_spending = create_service_price_bar_chart(merged_data)
 
         return fig_service_spending
+
+    # Report download callback
+
+    @app.callback(
+        Output("download-report", "data"),
+        Input("download-report-button", "n_clicks"),
+        [Input('date-picker-range', 'start_date'),
+        Input('date-picker-range', 'end_date')],
+        prevent_initial_call=True
+    )
+
+    def download_sales_report(n_clicks, start_date, end_date):
+
+        # Check which input triggered the callback
+        ctx = callback_context
+        if not ctx.triggered:
+            return None
+        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+        if button_id != 'download-report-button':
+            return None
+
+        print('this fuction is being called')
+        proposal_data = fetch_proposals_data()
+        request_data = fetch_requests_data()
+        travel_agent_data = fetch_travel_agent_data()
+        profile_data = fetch_profiles_data()
+        proposal_history_data = fetch_proposal_history_data()
+
+        merged_proposal_history = merge_tables(proposal_data, proposal_history_data, 'id', 'proposal_id')
+        merged_proposal_history = pick_columns(merged_proposal_history, 'title_x','request_id_x','status_x','owner_id_x','created_at_y','version_y','proposal_id')
+        merged_request = merge_tables(merged_proposal_history, request_data, 'request_id_x', 'id')
+        merged_profiles = merge_tables(merged_request, profile_data, 'owner_id_x', 'id')
+        merged_profiles = merge_names(merged_profiles, 'owner')
+        merged_profiles = pick_columns(merged_profiles, 'title_x','request_id_x','status_x','created_at_y','version_y','owner','travel_agent','proposal_id_x')
+        merged_travel_agent = merge_tables(merged_profiles, travel_agent_data, 'travel_agent', 'id')
+
+        sorted_data = merged_travel_agent.sort_values(by='version_y', ascending=False)
+        sent_df = sorted_data[sorted_data['status_x']=='SENT']
+        no_dups_df = sent_df.drop_duplicates(subset='proposal_id_x', keep='first')
+
+        copy_df = no_dups_df.copy()
+        copy_df['created_at_y'] = pd.to_datetime(copy_df['created_at_y']).dt.tz_localize(None)
+
+         # Filter by date range
+        if start_date is not None and end_date is not None:
+            start_date = pd.to_datetime(start_date)
+            end_date = pd.to_datetime(end_date)
+            copy_df = copy_df[(copy_df['created_at_y'] >= start_date) & (copy_df['created_at_y'] <= end_date)]
+
+        copy_df['created_at_y'] = copy_df['created_at_y'].dt.strftime('%Y-%m-%d %H:%M-%S')
+        final_df = copy_df.sort_values(by='created_at_y', ascending=False)
+
+        final_df['first_name'] = final_df['first_name'].fillna('')
+        final_df['last_name'] = final_df['last_name'].fillna('')
+
+        final_df = merge_names(final_df, 'travel_agent')
+        final_df['travel_agent'] = final_df['travel_agent'].str.strip()
+
+        final_df = pick_columns(final_df, 'title_x','created_at_y','version_y','owner','travel_agent','agency','email')
+        
+        new_column_names = {
+        'title_x': 'Title',
+        'created_at_y': 'Sent At',
+        'version_y': 'Version',
+        'owner': 'Owner',
+        'travel_agent': 'Travel Agent',
+        'agency':'Agency',
+        'email':'Email'
+        }
+
+
+        final_df = final_df.rename(columns=new_column_names)
+
+        return dcc.send_data_frame(final_df.to_excel, "sales_report.xlsx", sheet_name="Sales_report", index=False)
 
 
 def empty_figures(n):
