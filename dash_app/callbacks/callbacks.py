@@ -118,8 +118,15 @@ def register_callbacks(app):
         profile_data = fetch_profiles_data()
         proposal_history_data = fetch_proposal_history_data()
 
+
         merged_proposal_history = merge_tables(proposal_data, proposal_history_data, 'id', 'proposal_id')
         merged_proposal_history = pick_columns(merged_proposal_history, 'title_x','request_id_x','status_x','owner_id_x','created_at_y','version_y','proposal_id')
+        exclude_ids = [
+            'cf5e54ff-f7b6-4ac9-b26c-b1a53a6ff421',
+            '356ed23b-ea02-41b0-98ab-89ba686e1ab2',
+            'dc424d6e-dd04-4850-be63-19b4f557ffdc'
+        ]
+        merged_proposal_history = merged_proposal_history[~merged_proposal_history['owner_id_x'].isin(exclude_ids)]
         merged_request = merge_tables(merged_proposal_history, request_data, 'request_id_x', 'id')
         merged_profiles = merge_tables(merged_request, profile_data, 'owner_id_x', 'id')
         merged_profiles = merge_names(merged_profiles, 'owner')
@@ -147,6 +154,9 @@ def register_callbacks(app):
 
         final_df = merge_names(final_df, 'travel_agent')
         final_df['travel_agent'] = final_df['travel_agent'].str.strip()
+
+        final_df = final_df[~final_df['title_x'].str.contains('sample|test|ivo|nadine', case=False)]
+
 
         final_df = pick_columns(final_df, 'title_x','created_at_y','version_y','owner','travel_agent','agency','email')
         

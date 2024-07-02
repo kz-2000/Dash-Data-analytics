@@ -65,7 +65,7 @@ def fetch_travel_agent_data():
 
 def clean_data(df):
     df = df[~df['title'].str.contains('sample|test|ivo|nadine', case=False)]
-#    df = df[df['owner_id'] != '751f6b1f-e696-4eb1-9b4e-4e93b9ef1025']
+   # df = df[df['owner_id'] != 'cf5e54ff-f7b6-4ac9-b26c-b1a53a6ff421']
     df = df.reset_index(drop=True)
 
 #    print(df[df['status']=='TO_DO'])
