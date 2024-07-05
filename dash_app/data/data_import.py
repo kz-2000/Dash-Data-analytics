@@ -11,8 +11,25 @@ key = os.environ.get('SUPABASE_KEY')
 # Create a Supabase client
 supabase: Client = create_client(url, key)
 
+
 def fetch_proposals_data():
-    response = supabase.table('proposal').select('*').execute()
+    # List of owner IDs to exclude
+    excluded_owner_ids = [
+        'cf5e54ff-f7b6-4ac9-b26c-b1a53a6ff421', 
+        '356ed23b-ea02-41b0-98ab-89ba686e1ab2', 
+        'dc424d6e-dd04-4850-be63-19b4f557ffdc',
+        '392cb83a-26e9-4b81-aad5-a65144902e23'
+    ]
+    
+    # Using the Supabase SDK to filter data
+    response = supabase.table('proposal').select('*')\
+        .neq('title', 'sample')\
+        .neq('title', 'test')\
+        .neq('title', 'ivo')\
+        .neq('title', 'nadine')\
+        .not_.in_('owner_id', excluded_owner_ids)\
+        .execute()
+        
     data = response.data
     df = pd.DataFrame(data)
     df['created_at'] = pd.to_datetime(df['created_at'], format='ISO8601')
@@ -20,7 +37,7 @@ def fetch_proposals_data():
     return df
 
 def fetch_requests_data():
-    response = supabase.table('request').select('*').execute()
+    response = supabase.table('request').select('*').neq('status', 'ARCHIVED').execute()
     data = response.data
     df = pd.DataFrame(data)
     df['created_at'] = pd.to_datetime(df['created_at'], format='ISO8601')
@@ -38,6 +55,11 @@ def fetch_supplier_data():
 
 def fetch_proposal_service_data():
     response = supabase.table('proposal_service').select('*').execute()
+    data = response.data
+    return pd.DataFrame(data)
+
+def fetch_itinerary_service_data():
+    response = supabase.table('itinerary_service').select('*').execute()
     data = response.data
     return pd.DataFrame(data)
 
@@ -63,30 +85,22 @@ def fetch_travel_agent_data():
 
 # Clean the data for the proposal table
 
-def clean_data(df):
-    df = df[~df['title'].str.contains('sample|test|ivo|nadine', case=False)]
+#def clean_data(df):
+#    df = df[~df['title'].str.contains('sample|test|ivo|nadine', case=False)]
    # df = df[df['owner_id'] != 'cf5e54ff-f7b6-4ac9-b26c-b1a53a6ff421']
-    df = df.reset_index(drop=True)
+#    df = df.reset_index(drop=True)
 
 #    print(df[df['status']=='TO_DO'])
-    return df
+ #   return df
 
 # Clean the data for the request table
 
-def clean_request_data(df):
-#    print(f"Initial number of rows in the request data: {len(df)}")  # Print the initial number of rows
+#def clean_request_data(df):
+ #   df = df[df['status'] != 'ARCHIVED']
+
+  #  df = df.reset_index(drop=True)
     
-    # Filter the DataFrame
-    df = df[df['status'] != 'ARCHIVED']
-    
-#    print(f"Number of rows after filtering: {len(df)}")  # Print the number of rows after filtering
-    
-    # Reset the index
-    df = df.reset_index(drop=True)
-    
-#    print(f"Number of rows in the cleaned request data: {len(df)}")  # Print the number of rows after resetting the index
-    
-    return df
+   # return df
 
 def clean_profiles_data(df):
     df = df[df['id'] != 'dc424d6e-dd04-4850-be63-19b4f557ffdc' & '356ed23b-ea02-41b0-98ab-89ba686e1ab2']
@@ -94,13 +108,3 @@ def clean_profiles_data(df):
     df = df.reset_index(drop=True)
 
     return df
-
-# Fetch the data
-proposal_data = fetch_proposals_data()
-
-request_data = fetch_requests_data()
-
-# Clean the data
-clean_proposal_df = clean_data(proposal_data)
-
-clean_request_df = clean_data(request_data)

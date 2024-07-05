@@ -2,7 +2,7 @@ from dash.dependencies import Input, Output, State
 from dash import dcc, callback_context
 import plotly.express as px
 import plotly.graph_objects as go
-from dash_app.data.data_import import fetch_proposals_data, clean_data, fetch_requests_data, clean_request_data, fetch_area_data, fetch_supplier_data, fetch_proposal_service_data, fetch_service_data, fetch_proposal_history_data, fetch_travel_agent_data, fetch_profiles_data
+from dash_app.data.data_import import fetch_proposals_data, fetch_requests_data, fetch_area_data, fetch_supplier_data, fetch_proposal_service_data, fetch_service_data, fetch_proposal_history_data, fetch_travel_agent_data, fetch_profiles_data, fetch_itinerary_service_data
 from dash_app.figures.figures import create_histogram, create_conversion_figure, create_pie_chart, create_proposals_figure, create_requests_figure, create_supplier_bar_chart, create_service_price_bar_chart
 from dash_app.data.data_processing import calculate_conversion_rate, merge_tables, merge_names, pick_columns
 import pandas as pd
@@ -24,7 +24,6 @@ def register_callbacks(app):
             return empty_figures(5)
 
         proposal_data = fetch_proposals_data()
-        proposal_data = clean_data(proposal_data)
         area_data = fetch_area_data()
 
         # Calculate conversion rate only for the conversion figure
@@ -35,7 +34,6 @@ def register_callbacks(app):
         fig_conversion = create_conversion_figure(conversion_data)
         fig_pie = create_pie_chart(proposal_data, 'status', 'Proposals by Status')
         request_data = fetch_requests_data()
-        request_data = clean_request_data(request_data)
         fig_pie_requests = create_pie_chart(request_data, 'status', 'Requests by Status')
 
         return fig_proposals, fig_conversion, fig_pie, fig_pie_requests, fig_histogram
@@ -46,7 +44,6 @@ def register_callbacks(app):
             return empty_figures(1)[0]
 
         request_data = fetch_requests_data()
-        request_data = clean_request_data(request_data)
         request_data = request_data[request_data['created_at'] >= '2024-01-01']
         fig_requests = create_requests_figure(request_data)
 
@@ -58,8 +55,8 @@ def register_callbacks(app):
             return empty_figures(1)[0]
 
         supplier_data = fetch_supplier_data()
-        proposal_service_data = fetch_proposal_service_data()
-        merged_data = merge_tables(proposal_service_data, supplier_data, 'supplier_id', 'id')
+        itinerary_service_data = fetch_itinerary_service_data()
+        merged_data = merge_tables(itinerary_service_data, supplier_data, 'supplier_id', 'id')
         fig_suppliers = create_supplier_bar_chart(merged_data)
 
         return fig_suppliers
@@ -69,12 +66,12 @@ def register_callbacks(app):
         if n_clicks == 0:
             return empty_figures(1)[0]
 
-        proposal_service_data = fetch_proposal_service_data()
+        itinerary_service_data = fetch_itinerary_service_data()
         service_data = fetch_service_data()
 
         # Filter the data to include only 'CONFIRMED' or 'COMPLETED' statuses
-        proposal_service_data = proposal_service_data[proposal_service_data['status'].isin(['CONFIRMED', 'COMPLETED'])]
-        merged_data = merge_tables(service_data, proposal_service_data, 'id', 'service_id')
+     #   itinerary_service_data = itinerary_service_data[itinerary_service_data['status'].isin(['CONFIRMED', 'COMPLETED'])]
+        merged_data = merge_tables(service_data, itinerary_service_data, 'id', 'service_id')
 
         # Filter out rows where 'supplier_id' is missing
         merged_data = merged_data[merged_data['supplier_id'].notna()]
