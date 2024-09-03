@@ -2,7 +2,7 @@ from dash.dependencies import Input, Output, State
 from dash import dcc, callback_context
 import plotly.express as px
 import plotly.graph_objects as go
-from dash_app.data.data_import import fetch_proposals_data, fetch_requests_data, fetch_area_data, fetch_supplier_data, fetch_proposal_service_data, fetch_service_data, fetch_proposal_history_data, fetch_travel_agent_data, fetch_profiles_data, fetch_itinerary_service_data
+from dash_app.data.data_import import fetch_proposals_data, fetch_requests_data, fetch_area_data, fetch_supplier_data, fetch_proposal_service_data, fetch_service_data, fetch_proposal_history_data, fetch_travel_agent_data, fetch_profiles_data, fetch_itinerary_service_data, fetch_conversion_fig_data, fetch_area_hist_data
 from dash_app.figures.figures import create_histogram, create_conversion_figure, create_pie_chart, create_proposals_figure, create_requests_figure, create_supplier_bar_chart, create_service_price_bar_chart
 from dash_app.data.data_processing import calculate_conversion_rate, merge_tables, merge_names, pick_columns
 import pandas as pd
@@ -25,11 +25,13 @@ def register_callbacks(app):
 
         proposal_data = fetch_proposals_data()
         area_data = fetch_area_data()
+        conversion_fig_data = fetch_conversion_fig_data()
+        proposal_data_hist = fetch_area_hist_data()
 
         # Calculate conversion rate only for the conversion figure
-        conversion_data = calculate_conversion_rate(proposal_data.copy(deep=True))
+        conversion_data = calculate_conversion_rate(conversion_fig_data.copy(deep=True))
 
-        fig_histogram = create_histogram(proposal_data, area_data)
+        fig_histogram = create_histogram(proposal_data_hist, area_data)
         fig_proposals = create_proposals_figure(proposal_data)
         fig_conversion = create_conversion_figure(conversion_data)
         fig_pie = create_pie_chart(proposal_data, 'status', 'Proposals by Status')

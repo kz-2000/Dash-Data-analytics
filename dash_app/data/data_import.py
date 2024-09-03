@@ -22,7 +22,7 @@ def fetch_proposals_data():
     ]
     
     # Using the Supabase SDK to filter data
-    response = supabase.table('proposal').select('*')\
+    response = supabase.table('proposal').select('id, created_at, title, from_date, request_id, status, to_date, version, areas, updated_at, owner_id, itinerary_id')\
         .neq('title', 'sample')\
         .neq('title', 'test')\
         .neq('title', 'ivo')\
@@ -36,6 +36,55 @@ def fetch_proposals_data():
     df['updated_at'] = pd.to_datetime(df['updated_at'], format='ISO8601')
     return df
 
+# Fetches data for the conversion figure
+
+def fetch_conversion_fig_data():
+        # List of owner IDs to exclude
+    excluded_owner_ids = [
+        'cf5e54ff-f7b6-4ac9-b26c-b1a53a6ff421', 
+        '356ed23b-ea02-41b0-98ab-89ba686e1ab2', 
+        'dc424d6e-dd04-4850-be63-19b4f557ffdc',
+        '392cb83a-26e9-4b81-aad5-a65144902e23'
+    ]
+    
+    # Using the Supabase SDK to filter data
+    response = supabase.table('proposal').select('status, updated_at')\
+        .neq('title', 'sample')\
+        .neq('title', 'test')\
+        .neq('title', 'ivo')\
+        .neq('title', 'nadine')\
+        .not_.in_('owner_id', excluded_owner_ids)\
+        .execute()
+        
+    data = response.data
+    df = pd.DataFrame(data)
+    df['updated_at'] = pd.to_datetime(df['updated_at'], format='ISO8601')
+    return df
+
+# Fetches data for the proposals per area per status histogram  
+
+def fetch_area_hist_data():
+          # List of owner IDs to exclude
+    excluded_owner_ids = [
+        'cf5e54ff-f7b6-4ac9-b26c-b1a53a6ff421', 
+        '356ed23b-ea02-41b0-98ab-89ba686e1ab2', 
+        'dc424d6e-dd04-4850-be63-19b4f557ffdc',
+        '392cb83a-26e9-4b81-aad5-a65144902e23'
+    ]
+    
+    # Using the Supabase SDK to filter data
+    response = supabase.table('proposal').select('status, areas')\
+        .neq('title', 'sample')\
+        .neq('title', 'test')\
+        .neq('title', 'ivo')\
+        .neq('title', 'nadine')\
+        .not_.in_('owner_id', excluded_owner_ids)\
+        .execute()
+        
+    data = response.data
+    df = pd.DataFrame(data)
+    return df  
+
 def fetch_requests_data():
     response = supabase.table('request').select('*').neq('status', 'ARCHIVED').execute()
     data = response.data
@@ -44,7 +93,7 @@ def fetch_requests_data():
     return df
 
 def fetch_area_data():
-    response = supabase.table('area').select('*').execute()
+    response = supabase.table('area').select('id, name').execute()
     data = response.data
     return pd.DataFrame(data)
 
