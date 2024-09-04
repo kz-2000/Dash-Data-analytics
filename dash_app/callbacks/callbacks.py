@@ -2,7 +2,7 @@ from dash.dependencies import Input, Output, State
 from dash import dcc, callback_context
 import plotly.express as px
 import plotly.graph_objects as go
-from dash_app.data.data_import import fetch_proposals_data, fetch_requests_data, fetch_area_data, fetch_supplier_data, fetch_proposal_service_data, fetch_service_data, fetch_proposal_history_data, fetch_travel_agent_data, fetch_profiles_data, fetch_itinerary_service_data, fetch_conversion_fig_data, fetch_area_hist_data
+from dash_app.data.data_import import fetch_proposals_data, fetch_requests_data, fetch_area_data, fetch_supplier_data, fetch_proposal_service_data, fetch_service_data, fetch_proposal_history_data, fetch_travel_agent_data, fetch_profiles_data, fetch_itinerary_service_data, fetch_conversion_fig_data, fetch_area_hist_data, fetch_itinerary_data
 from dash_app.figures.figures import create_histogram, create_conversion_figure, create_pie_chart, create_proposals_figure, create_requests_figure, create_supplier_bar_chart, create_service_price_bar_chart
 from dash_app.data.data_processing import calculate_conversion_rate, merge_tables, merge_names, pick_columns
 import pandas as pd
@@ -14,42 +14,44 @@ def register_callbacks(app):
             Output('live-update-graph-proposals', 'figure'),
             Output('live-update-graph-conversion', 'figure'),
             Output('pie-chart-proposals-status', 'figure'),
-            Output('pie-chart-requests-status', 'figure'),
+           # Output('pie-chart-requests-status', 'figure'),
             Output('histogram-confirmed-proposals-area', 'figure')
         ],
         [Input('fetch-button', 'n_clicks')]
     )
     def update_graph_proposals(n_clicks):
         if n_clicks == 0:
-            return empty_figures(5)
+            return empty_figures(4)
 
         proposal_data = fetch_proposals_data()
+        itinerary_data = fetch_itinerary_data()
         area_data = fetch_area_data()
         conversion_fig_data = fetch_conversion_fig_data()
         proposal_data_hist = fetch_area_hist_data()
 
         # Calculate conversion rate only for the conversion figure
-        conversion_data = calculate_conversion_rate(conversion_fig_data.copy(deep=True))
+        conversion_data = calculate_conversion_rate(conversion_fig_data, itinerary_data)
 
         fig_histogram = create_histogram(proposal_data_hist, area_data)
         fig_proposals = create_proposals_figure(proposal_data)
         fig_conversion = create_conversion_figure(conversion_data)
         fig_pie = create_pie_chart(proposal_data, 'status', 'Proposals by Status')
-        request_data = fetch_requests_data()
-        fig_pie_requests = create_pie_chart(request_data, 'status', 'Requests by Status')
+     #   request_data = fetch_requests_data()
+     #   fig_pie_requests = create_pie_chart(request_data, 'status', 'Requests by Status')
 
-        return fig_proposals, fig_conversion, fig_pie, fig_pie_requests, fig_histogram
+       # return fig_proposals, fig_conversion, fig_pie, fig_pie_requests, fig_histogram
+        return fig_proposals, fig_conversion, fig_pie, fig_histogram
 
-    @app.callback(Output('live-update-graph-requests', 'figure'), [Input('fetch-button', 'n_clicks')])
-    def update_graph_requests(n_clicks):
-        if n_clicks == 0:
-            return empty_figures(1)[0]
+   # @app.callback(Output('live-update-graph-requests', 'figure'), [Input('fetch-button', 'n_clicks')])
+   # def update_graph_requests(n_clicks):
+   #     if n_clicks == 0:
+   #         return empty_figures(1)[0]
 
-        request_data = fetch_requests_data()
-        request_data = request_data[request_data['created_at'] >= '2024-01-01']
-        fig_requests = create_requests_figure(request_data)
+   #     request_data = fetch_requests_data()
+   #     request_data = request_data[request_data['created_at'] >= '2024-01-01']
+   #     fig_requests = create_requests_figure(request_data)
 
-        return fig_requests
+   #     return fig_requests
 
     @app.callback(Output('supplier-bar-chart', 'figure'), [Input('fetch-button', 'n_clicks')])
     def update_supplier_barchart(n_clicks):

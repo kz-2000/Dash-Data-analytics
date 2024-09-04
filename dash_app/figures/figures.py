@@ -45,20 +45,19 @@ def create_proposals_figure(proposal_data):
     return fig_proposals
 
 
-# Creates Line graph displaying the conversion rate over time, using the updated_at column
+# Creates Line graph displaying the conversion rate over time, using the created_at_itinerary
 
-def create_conversion_figure(proposal_data):
-    conversion_rate_data = proposal_data.resample('D', on='updated_at').last().reset_index()
+def create_conversion_figure(conversion_data):
 
     fig_conversion = go.Figure()
-    fig_conversion.add_trace(go.Scatter(x=conversion_rate_data['updated_at'], y=conversion_rate_data['total_conversion_rate'],
-                                        mode='lines+markers', name='Conversion Rate'))
+    fig_conversion.add_trace(go.Scatter(x=conversion_data['created_at_proposal'], y=conversion_data['total_conversion_rate'],
+                                        mode='lines', name='Conversion Rate'))
     fig_conversion.update_layout(
         title='Total Conversion Rate Over Time',
         xaxis_title='Date',
-        yaxis_title='Conversion Rate',
+        yaxis_title='Conversion Rate (%)',
         legend_title='Metric',
-        yaxis=dict(tickformat='.0%'),
+        yaxis=dict(tickformat='.2%'),
         font=dict(family='Poppins, sans-serif')
     )
     return fig_conversion
@@ -93,23 +92,32 @@ def create_requests_figure(request_data):
 # Creates a bar chart displaying the amount of services per supplier sold
 
 def create_supplier_bar_chart(merged_data):
-    # Group by supplier and count the number of services
+        # Group by supplier and count the number of services
     supplier_service_count = merged_data.groupby('name')['service_id'].count().reset_index()
     supplier_service_count.columns = ['Supplier', 'Number of Services']
 
-    # Create the bar chart
-    fig = px.bar(supplier_service_count, x='Supplier', y='Number of Services', title='Number of Services Provided by Each Supplier')
+    supplier_service_count = supplier_service_count[supplier_service_count['Supplier'] != 'sami daik tours']
 
-    return fig
+# Sort the DataFrame by 'Number_of_Services' in descending order
+    df_sorted = supplier_service_count.sort_values(by='Number of Services', ascending=False)
+    df_top_20 = df_sorted.head(30)
+
+    # Create the bar chart
+    fig = px.bar(df_top_20, x='Supplier', y='Number of Services', title='Top 30 Number of Services Provided by Each Supplier')
+
+    return fig 
 
 # Creates a bar chart with the money spent per service
 
 def create_service_price_bar_chart(merged_data):
     # Group by 'service_name' and calculate the total amount spent per service
     spending_per_service = merged_data.groupby('title')['price'].sum().reset_index()
+    spending_per_service_sorted = spending_per_service.sort_values(by='price', ascending = False)
+
+    spending_per_service_top30 = spending_per_service_sorted.head(40)
 
     # Create a bar chart using Plotly Express
-    fig = px.bar(spending_per_service, x='title', y='price', title='Total Amount Spent per Service')
+    fig = px.bar(spending_per_service_top30, x='title', y='price', title='Top 40 Total Amount Spent per Service')
 
     # Customize the layout of the chart
     fig.update_layout(

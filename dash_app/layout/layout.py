@@ -48,7 +48,7 @@ def create_layout():
 # Pie charts Proposals & Requests by status
         dbc.Row([
             dbc.Col(dcc.Graph(id='pie-chart-proposals-status', config={'displayModeBar': True}), width=6),
-            dbc.Col(dcc.Graph(id='pie-chart-requests-status', config={'displayModeBar': True}), width=6),
+            #dbc.Col(dcc.Graph(id='pie-chart-requests-status', config={'displayModeBar': True}), width=6),
         ], className="mb-4 rounded-row"),
 
 # Histogram for proposals per status per area
@@ -57,8 +57,8 @@ def create_layout():
         ], className="mb-4 rounded-row"),
 
 # Request cumulative over time and weekly
-        dbc.Row([
-            dbc.Col(dcc.Graph(id='live-update-graph-requests', config={'displayModeBar': True}), width=12)
-        ], className="mb-4 rounded-row"),
-
+#        dbc.Row([
+#            dbc.Col(dcc.Graph(id='live-update-graph-requests', config={'displayModeBar': True}), width=12)
+#        ], className="mb-4 rounded-row"),
+#
     ], fluid=True)
