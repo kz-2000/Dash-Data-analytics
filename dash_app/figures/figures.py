@@ -1,5 +1,6 @@
 import plotly.express as px
 import plotly.graph_objects as go
+from dash_app.data.data_processing import merge_names
 
 # Creates Histogram displaying the amount of proposals per Area, divided per Status
 
@@ -127,3 +128,27 @@ def create_service_price_bar_chart(merged_data):
     )
 
     return fig
+
+# Creates Histogram displaying the amount of proposals per Area, divided per Status
+
+def create_user_conversion_chart(proposal_data, user_data):
+    merged_data = proposal_data.merge(user_data, how='left', left_on='owner_id', right_on='id')
+    merged_data = merge_names(merged_data, 'name')
+
+    grouped_data = merged_data.groupby(['name', 'status']).size().reset_index(name='count').sort_values(by='count', ascending=False)
+    total_proposals = grouped_data.groupby('name')['count'].sum().reset_index(name='total_count')
+    fig_histogram = px.bar(grouped_data, x='name', y='count', color='status', barmode='stack',
+                           labels={'status': 'status', 'count': 'Number of Proposals'},
+                           title='Proposals per User per Status')
+    fig_histogram.update_layout(font=dict(family='Poppins, sans-serif'))
+
+    for idx, row in total_proposals.iterrows():
+        fig_histogram.add_annotation(
+            x=row['name'], 
+            y=row['total_count'], 
+            text=str(row['total_count']),
+            showarrow=False,
+            yshift=10
+        )
+
+    return fig_histogram

@@ -2,8 +2,8 @@ from dash.dependencies import Input, Output, State
 from dash import dcc, callback_context
 import plotly.express as px
 import plotly.graph_objects as go
-from dash_app.data.data_import import fetch_proposals_data, fetch_requests_data, fetch_area_data, fetch_supplier_data, fetch_proposal_service_data, fetch_service_data, fetch_proposal_history_data, fetch_travel_agent_data, fetch_profiles_data, fetch_itinerary_service_data, fetch_conversion_fig_data, fetch_area_hist_data, fetch_itinerary_data
-from dash_app.figures.figures import create_histogram, create_conversion_figure, create_pie_chart, create_proposals_figure, create_requests_figure, create_supplier_bar_chart, create_service_price_bar_chart
+from dash_app.data.data_import import fetch_proposals_data, fetch_requests_data, fetch_area_data, fetch_supplier_data, fetch_proposal_service_data, fetch_service_data, fetch_proposal_history_data, fetch_travel_agent_data, fetch_profiles_data, fetch_itinerary_service_data, fetch_conversion_fig_data, fetch_area_hist_data, fetch_itinerary_data, fetch_prop_data_user_hist
+from dash_app.figures.figures import create_histogram, create_conversion_figure, create_pie_chart, create_proposals_figure, create_requests_figure, create_supplier_bar_chart, create_service_price_bar_chart, create_user_conversion_chart
 from dash_app.data.data_processing import calculate_conversion_rate, merge_tables, merge_names, pick_columns
 import pandas as pd
 import openpyxl
@@ -175,6 +175,19 @@ def register_callbacks(app):
         final_df = final_df.rename(columns=new_column_names)
 
         return dcc.send_data_frame(final_df.to_excel, "sales_report.xlsx", sheet_name="Sales_report", index=False)
+
+    @app.callback(Output('user_conversion_chart', 'figure'), [Input('fetch-button', 'n_clicks')])
+
+    def update_user_conversion_chart(n_clicks):
+        if n_clicks == 0:
+            return empty_figures(1)[0]
+
+        proposal_data = fetch_prop_data_user_hist()
+        user_data = fetch_profiles_data()
+
+        user_conversion_chart = create_user_conversion_chart(proposal_data, user_data)
+        
+        return user_conversion_chart
 
 
 def empty_figures(n):

@@ -56,6 +56,10 @@ def create_layout():
             dbc.Col(dcc.Graph(id='histogram-confirmed-proposals-area', config={'displayModeBar': True}), width=12)
         ], className="mb-4 rounded-row"),
 
+# Histogram showing conversion rate per user
+         dbc.Row([
+            dbc.Col(dcc.Graph(id='user_conversion_chart', config={'displayModeBar': True}), width=12)
+        ], className="mb-4 rounded-row"),       
 # Request cumulative over time and weekly
 #        dbc.Row([
 #            dbc.Col(dcc.Graph(id='live-update-graph-requests', config={'displayModeBar': True}), width=12)

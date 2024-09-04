@@ -36,6 +36,28 @@ def fetch_proposals_data():
     df['updated_at'] = pd.to_datetime(df['updated_at'], format='ISO8601')
     return df
 
+def fetch_prop_data_user_hist():
+    excluded_owner_ids = [
+        'cf5e54ff-f7b6-4ac9-b26c-b1a53a6ff421', 
+        '356ed23b-ea02-41b0-98ab-89ba686e1ab2', 
+        'dc424d6e-dd04-4850-be63-19b4f557ffdc',
+        '392cb83a-26e9-4b81-aad5-a65144902e23',
+        '392cb83a-26e9-4b81-aad5-a65144902e23'
+    ]
+    
+    # Using the Supabase SDK to filter data
+    response = supabase.table('proposal').select('title, status, owner_id')\
+        .neq('title', 'sample')\
+        .neq('title', 'test')\
+        .neq('title', 'ivo')\
+        .neq('title', 'nadine')\
+        .not_.in_('owner_id', excluded_owner_ids)\
+        .execute()
+        
+    data = response.data
+    df = pd.DataFrame(data)
+
+    return df
 # Fetches data for the conversion figure
 
 def fetch_conversion_fig_data():
@@ -131,7 +153,7 @@ def fetch_itinerary_service_data():
     return pd.DataFrame(data)
 
 def fetch_profiles_data():
-    response = supabase.table('profiles').select('*').execute()
+    response = supabase.table('profiles').select('id, first_name, last_name').execute()
     data = response.data
     return  pd.DataFrame(data)
 
